@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { PredictionMarketState } from "@/app/mocks/prediction-market-data"
 
 interface Bet {
   prediction: string
@@ -14,7 +15,13 @@ interface Bet {
   reward?: number
 }
 
-export default function UserPositions() {
+interface UserPositionsProps {
+  userBet?: PredictionMarketState['userBet']
+  outcome?: PredictionMarketState['outcome']
+  onClaim: () => void
+}
+
+export default function UserPositions({ userBet, outcome, onClaim }: UserPositionsProps) {
   const [currentBet, setCurrentBet] = useState<Bet | null>(null)
 
   useEffect(() => {
@@ -42,48 +49,35 @@ export default function UserPositions() {
     }
   }
 
-  if (!currentBet) {
-    return null
+  if (!userBet) {
+    return (
+      <div className="rounded-xl border bg-card p-4 md:p-6">
+        <h3 className="text-lg font-semibold mb-4">Your Positions</h3>
+        <p className="text-muted-foreground">No active positions</p>
+      </div>
+    )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Active Positions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Prediction</p>
-              <p className="font-medium">{currentBet.prediction} will grow fastest</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Amount</p>
-              <p className="font-medium">{currentBet.amount} RLUSD</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Settlement Period</p>
-              <p className="font-medium">{currentBet.duration === "1d" ? "24 Hours" : "Perpetual"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <p className="font-medium capitalize">{currentBet.status}</p>
-            </div>
+    <div className="rounded-xl border bg-card p-4 md:p-6">
+      <h3 className="text-lg font-semibold mb-4">Your Positions</h3>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="font-medium">Bet on {userBet.choice}</p>
+            <p className="text-sm text-muted-foreground">Amount: {userBet.amount}</p>
           </div>
-
-          {currentBet.status === "won" && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Available to Claim</p>
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-bold text-green-600">{currentBet.reward} RLUSD</p>
-                <Button onClick={handleClaim}>Claim Rewards</Button>
-              </div>
-            </div>
+          {outcome && outcome.canClaim && (
+            <button
+              onClick={onClaim}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Claim {outcome.reward}
+            </button>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

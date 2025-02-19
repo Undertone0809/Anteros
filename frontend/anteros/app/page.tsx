@@ -53,8 +53,8 @@ export default function Home() {
                 <Button variant="outline">Trade</Button>
               </div>
               <div className="flex items-center gap-4">
-                <div className="bg-green-100 text-green-700 px-3 py-1 rounded">Yes: 75%</div>
-                <div className="bg-red-100 text-red-700 px-3 py-1 rounded">No: 25%</div>
+                <div className="bg-green-100 text-green-700 px-3 py-1 rounded">Yes: 75.32%</div>
+                <div className="bg-red-100 text-red-700 px-3 py-1 rounded">No: 24.68%</div>
                 <span className="text-sm text-muted-foreground ml-auto">Volume: $100K</span>
               </div>
             </div>
@@ -68,8 +68,8 @@ export default function Home() {
                 <Button variant="outline">Trade</Button>
               </div>
               <div className="flex items-center gap-4">
-                <div className="bg-green-100 text-green-700 px-3 py-1 rounded">Yes: 60%</div>
-                <div className="bg-red-100 text-red-700 px-3 py-1 rounded">No: 40%</div>
+                <div className="bg-green-100 text-green-700 px-3 py-1 rounded">Yes: 63.26%</div>
+                <div className="bg-red-100 text-red-700 px-3 py-1 rounded">No: 36.74%</div>
                 <span className="text-sm text-muted-foreground ml-auto">Volume: $75K</span>
               </div>
             </div>
