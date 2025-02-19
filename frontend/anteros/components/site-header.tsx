@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,9 +10,17 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { Activity, BarChart2, Home, Layout, Menu, Search, Trophy, UserCircle } from "lucide-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Activity, BarChart2, Home, Layout, LogOut, Menu, Search, Settings, Trophy, UserCircle } from "lucide-react"
+import { useState } from "react"
 
 export default function SiteHeader() {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-7xl mx-auto px-4">
@@ -71,9 +81,46 @@ export default function SiteHeader() {
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <UserCircle className="h-5 w-5" />
-            </Button>
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hidden md:flex"
+                  onMouseEnter={() => setIsPopoverOpen(true)}
+                  onMouseLeave={() => setIsPopoverOpen(false)}
+                >
+                  <UserCircle className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-56" 
+                align="end"
+                onMouseEnter={() => setIsPopoverOpen(true)}
+                onMouseLeave={() => setIsPopoverOpen(false)}
+              >
+                <div className="space-y-4">
+                  <div className="border-b pb-2">
+                    <p className="text-sm font-medium">Your Account</p>
+                    <p className="text-xs text-muted-foreground">0x1234...5678</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <UserCircle className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-50">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Disconnect
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button variant="default" size="sm">
               Connect Wallet
             </Button>

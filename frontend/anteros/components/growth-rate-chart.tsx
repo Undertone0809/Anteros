@@ -27,7 +27,7 @@ const options = {
     },
     title: {
       display: true,
-      text: "Follower Growth Rate (%/hour)",
+      text: "X Follower Growth Rate (%/hour)",
     },
   },
   scales: {
