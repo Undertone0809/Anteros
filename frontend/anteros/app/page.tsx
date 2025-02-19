@@ -5,16 +5,22 @@ import SiteHeader from "@/components/site-header"
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <SiteHeader />
-      <main className="container mx-auto p-4 flex-1">
-        <h1 className="text-3xl font-bold mb-6">Social Prediction Market</h1>
-        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
-            <GrowthRateChart />
-            <UserPositions />
+      <main className="flex-1">
+        <div className="container max-w-7xl mx-auto px-4 py-6 md:py-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8">Social Prediction Market</h1>
+          <div className="grid gap-4 md:gap-6 lg:grid-cols-[1fr_380px]">
+            <div className="space-y-4 md:space-y-6">
+              <div className="rounded-xl border bg-card p-4 md:p-6">
+                <GrowthRateChart />
+              </div>
+              <UserPositions />
+            </div>
+            <div className="lg:sticky lg:top-6 h-fit">
+              <BettingInterface />
+            </div>
           </div>
-          <BettingInterface />
         </div>
       </main>
     </div>
