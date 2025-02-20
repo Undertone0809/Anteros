@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic'
 import { Chart as ChartJS, ChartData, LineElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { TooltipItem } from 'chart.js'
+import { motion } from "framer-motion"
 
 const LineChart = dynamic(
   () => import('react-chartjs-2').then((mod) => mod.Line),
@@ -57,6 +58,43 @@ const calculateGrowthRates = (data: { timestamp: string; odds: number }[]): { ti
 
   return rates;
 };
+
+const LoadingAnimation = () => {
+  return (
+    <div className="h-[400px] flex flex-col items-center justify-center gap-4">
+      <motion.div
+        className="flex gap-2"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-4 h-4 rounded-full bg-primary"
+            animate={{
+              y: ["0%", "-50%", "0%"],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              delay: i * 0.2,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </motion.div>
+      <motion.div
+        className="text-muted-foreground text-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        Loading market data...
+      </motion.div>
+    </div>
+  )
+}
 
 export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
   const [isClient, setIsClient] = useState(false)
@@ -263,9 +301,7 @@ export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
       </CardHeader>
       <CardContent>
         {!isClient ? (
-          <div className="h-[400px] flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin">Loading...</div>
-          </div>
+          <LoadingAnimation />
         ) : (
           <LineChart
             options={options}

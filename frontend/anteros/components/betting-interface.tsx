@@ -19,7 +19,7 @@ interface BettingInterfaceProps {
 }
 
 export default function BettingInterface({ marketState, onBet }: BettingInterfaceProps) {
-  const [amount, setAmount] = useState(110)
+  const [amount, setAmount] = useState(110.5)
   const [selectedChoice, setSelectedChoice] = useState<"altman" | "musk" | "trump" | null>(null)
   const [position, setPosition] = useState<"long" | "short">("long")
   const [leverage, setLeverage] = useState(1)

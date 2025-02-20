@@ -224,29 +224,41 @@ const generateHistoricalOdds = (
       odds *= 1 + eventImpacts.get(dateStr)!;
     }
 
-    // Generate mock volume and liquidity data
+    // Generate mock volume and liquidity data with more realistic base values
     const baseVolume =
-      personality === "altman" ? 10000 : personality === "musk" ? 8000 : 7000;
+      personality === "altman"
+        ? 12437.89
+        : personality === "musk"
+        ? 9876.54
+        : 7654.32;
     const baseLiquidity =
       personality === "altman"
-        ? 100000
+        ? 28743.21
         : personality === "musk"
-        ? 80000
-        : 70000;
+        ? 23156.78
+        : 19876.43;
 
-    const volume = baseVolume * (1 + (Math.random() - 0.5) * 0.2); // 20% variation
-    const liquidity = baseLiquidity * (1 + (Math.random() - 0.5) * 0.1); // 10% variation
+    // Add some natural variation to the numbers
+    const volumeVariation = 0.15 + Math.random() * 0.1; // 15-25% variation
+    const liquidityVariation = 0.08 + Math.random() * 0.07; // 8-15% variation
+
+    const volume = baseVolume * (1 + (Math.random() - 0.5) * volumeVariation);
+    const liquidity =
+      baseLiquidity * (1 + (Math.random() - 0.5) * liquidityVariation);
 
     // For recent data (last 24h), generate hourly data points
     if (i === 364) {
       for (let hour = 0; hour < 24; hour++) {
         const hourDate = new Date(date);
         hourDate.setHours(hour);
+        const hourlyVolume = (volume / 24) * (0.85 + Math.random() * 0.3); // 85-115% of average hourly volume
+        const hourlyLiquidity = liquidity * (0.95 + Math.random() * 0.1); // 95-105% of daily liquidity
+
         points.push({
           timestamp: hourDate.toISOString(),
           odds: addNoise(odds, 0.02),
-          volume: (volume / 24) * (1 + (Math.random() - 0.5) * 0.3), // Hourly volume with 30% variation
-          liquidity: liquidity * (1 + (Math.random() - 0.5) * 0.05), // Hourly liquidity with 5% variation
+          volume: hourlyVolume,
+          liquidity: hourlyLiquidity,
         });
       }
     } else {
@@ -296,11 +308,11 @@ export const initialMarketState: PredictionMarketState = {
   timeframe: "24h",
   marketStatus: "open",
   liquidityPool: {
-    total: 1000000,
+    total: 287432.18,
     distribution: {
-      altman: 400000,
-      musk: 300000,
-      trump: 300000,
+      altman: 143716.09,
+      musk: 86229.65,
+      trump: 57486.44,
     },
   },
   options: {
@@ -308,27 +320,27 @@ export const initialMarketState: PredictionMarketState = {
       odds: 1.85,
       totalBets: 47892.31,
       supporters: 312,
-      volume24h: 10000,
-      priceChange24h: 0.02,
-      liquidityDepth: 100000,
+      volume24h: 12437.89,
+      priceChange24h: 0.0234,
+      liquidityDepth: 28743.21,
       historicalOdds: generateHistoricalOdds(1.85, "altman"),
     },
     musk: {
       odds: 2.45,
       totalBets: 41765.84,
       supporters: 285,
-      volume24h: 8000,
-      priceChange24h: 0.03,
-      liquidityDepth: 80000,
+      volume24h: 9876.54,
+      priceChange24h: 0.0312,
+      liquidityDepth: 23156.78,
       historicalOdds: generateHistoricalOdds(2.45, "musk"),
     },
     trump: {
       odds: 3.15,
       totalBets: 35218.37,
       supporters: 295,
-      volume24h: 7000,
-      priceChange24h: 0.04,
-      liquidityDepth: 70000,
+      volume24h: 7654.32,
+      priceChange24h: 0.0423,
+      liquidityDepth: 19876.43,
       historicalOdds: generateHistoricalOdds(3.15, "trump"),
     },
   },
@@ -338,15 +350,15 @@ export const initialMarketState: PredictionMarketState = {
     trump: 315.0,
   },
   marketMetrics: {
-    totalVolume24h: 25000,
-    totalValueLocked: 1000000,
+    totalVolume24h: 29968.75,
+    totalValueLocked: 287432.18,
     impliedProbabilities: {
-      altman: 0.45,
-      musk: 0.35,
-      trump: 0.2,
+      altman: 0.4532,
+      musk: 0.3487,
+      trump: 0.1981,
     },
-    volatility24h: 0.15,
-    marketEfficiency: 0.92,
+    volatility24h: 0.1423,
+    marketEfficiency: 0.9187,
   },
 };
 
