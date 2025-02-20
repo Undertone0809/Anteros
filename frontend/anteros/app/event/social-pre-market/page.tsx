@@ -44,6 +44,12 @@ export default function SocialPreMarket() {
     useState<PredictionMarketState>(initialMarketState);
   const [aiSummaryVisible, setAiSummaryVisible] = useState(false);
   const [aiSummaryText, setAiSummaryText] = useState("");
+  const [formattedEndTime, setFormattedEndTime] = useState("");
+
+  // Format date on client side only
+  useEffect(() => {
+    setFormattedEndTime(formatDate(marketState.endTime));
+  }, [marketState.endTime]);
 
   // Simulate time progression and state changes
   useEffect(() => {
@@ -103,15 +109,15 @@ export default function SocialPreMarket() {
               <p className="text-muted-foreground">Predict the social influence trajectory of tech leaders</p>
             </div>
             <div className="flex items-center gap-4">
-              <Badge variant="outline" className="px-4 py-1.5">
+              <Badge className="px-4 py-1.5">
                 <Clock className="w-4 h-4 mr-2" />
-                {formatDate(marketState.endTime)}
+                {formattedEndTime}
               </Badge>
-              <Badge variant="outline" className="px-4 py-1.5">
+              <Badge className="px-4 py-1.5">
                 <Users className="w-4 h-4 mr-2" />
                 {marketState.participants} Participants
               </Badge>
-              <Badge variant="outline" className="px-4 py-1.5">
+              <Badge className="px-4 py-1.5">
                 <DollarSign className="w-4 h-4 mr-2" />
                 ${marketState.poolSize.toLocaleString()} Pool
               </Badge>
@@ -133,7 +139,7 @@ export default function SocialPreMarket() {
                     <CardHeader className="p-4">
                       <CardTitle className="text-lg flex items-center justify-between">
                         {name.charAt(0).toUpperCase() + name.slice(1)}
-                        <Badge variant={data.odds > 2 ? "destructive" : "default"}>
+                        <Badge>
                           {data.odds.toFixed(2)}x
                         </Badge>
                       </CardTitle>

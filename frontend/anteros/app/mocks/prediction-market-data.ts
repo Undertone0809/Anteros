@@ -61,49 +61,51 @@ export const aiSummaries = {
   ],
 };
 
+// Fixed timestamp for consistent rendering
+const FIXED_START_TIME = "2025-02-21T09:44:38.000Z";
+const FIXED_END_TIME = "2025-02-22T09:44:38.000Z";
+
 export const initialMarketState: PredictionMarketState = {
-  currentTime: new Date().toISOString(),
-  endTime: new Date(
-    Date.now() + 23 * 60 * 60 * 1000 + 50 * 60 * 1000
-  ).toISOString(),
-  poolSize: 75000,
-  participants: 345,
+  currentTime: FIXED_START_TIME,
+  endTime: FIXED_END_TIME,
+  poolSize: 124876.52,
+  participants: 892,
   options: {
     altman: {
-      odds: 2.15,
-      totalBets: 25000,
-      supporters: 115,
+      odds: 1.85,
+      totalBets: 47892.31,
+      supporters: 312,
     },
     musk: {
-      odds: 1.95,
-      totalBets: 28000,
-      supporters: 145,
+      odds: 2.45,
+      totalBets: 41765.84,
+      supporters: 285,
     },
     trump: {
-      odds: 2.35,
-      totalBets: 22000,
-      supporters: 85,
+      odds: 3.15,
+      totalBets: 35218.37,
+      supporters: 295,
     },
   },
   potentialReturns: {
-    altman: 236.5,
-    musk: 214.5,
-    trump: 258.5,
+    altman: 185.0,
+    musk: 245.0,
+    trump: 315.0,
   },
 };
 
 export const afterBetState: PredictionMarketState = {
   ...initialMarketState,
   userBet: {
-    amount: 110,
+    amount: 110.5,
     choice: "altman",
-    timestamp: new Date().toISOString(),
+    timestamp: FIXED_START_TIME,
   },
   options: {
     ...initialMarketState.options,
     altman: {
       ...initialMarketState.options.altman,
-      totalBets: initialMarketState.options.altman.totalBets + 110,
+      totalBets: initialMarketState.options.altman.totalBets + 110.5,
       supporters: initialMarketState.options.altman.supporters + 1,
     },
   },
@@ -111,43 +113,42 @@ export const afterBetState: PredictionMarketState = {
 
 export const finalState: PredictionMarketState = {
   ...afterBetState,
-  currentTime: initialMarketState.currentTime,
-  endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  currentTime: FIXED_START_TIME,
+  endTime: FIXED_END_TIME,
   outcome: {
     winner: "altman",
     canClaim: true,
-    reward: 236.5,
+    reward: 185.0,
   },
 };
 
 export const mockTimeProgression = [
   {
-    timestamp: new Date().toISOString(),
+    timestamp: FIXED_START_TIME,
     event: "BETTING_STARTED",
-    message: "Placed 110 on Altman",
+    message: "Placed 110.50 on Altman",
   },
   {
-    timestamp: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    timestamp: "2025-02-21T09:54:38.000Z", // FIXED_START_TIME + 10 minutes
     event: "TIME_UPDATE",
     message: "Market closing soon",
   },
   {
-    timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    timestamp: FIXED_END_TIME,
     event: "MARKET_CLOSED",
     message: "Market closed - Altman wins!",
   },
 ];
-
 export const streamingAISummary = {
   chunks: [
-    "Analyzing recent market data and social indicators...",
-    "Altman's recent product launches have shown strong market reception...",
-    "Social sentiment analysis indicates positive momentum...",
-    "Technical indicators suggest favorable conditions...",
-    "Historical pattern analysis supports a bullish outlook...",
-    "Prediction: 68% probability of positive outcome for Altman position",
+    "Analyzing market data and social indicators...",
+    "Clear competitive dynamics between Altman and Musk, market divergence increasing...",
+    "Social media sentiment analysis shows escalating tensions between supporter groups...",
+    "Technical indicators show increasing market volatility...",
+    "Historical pattern analysis shows win probability distribution: Altman 40%, Musk 35%, Trump 25%",
+    "Prediction: Market will maintain highly competitive dynamics, recommend monitoring real-time data changes",
   ],
-  delay: 100, // ms between chunks
+  delay: 100,
 };
 
 export interface ChartDataPoint {
@@ -158,19 +159,19 @@ export interface ChartDataPoint {
 }
 
 export const mockChartData: ChartDataPoint[] = [
-  { timestamp: "00:00", altman: 4.0, musk: 4.2, trump: 3.8 },
-  { timestamp: "02:00", altman: 4.1, musk: 4.0, trump: 3.7 },
-  { timestamp: "04:00", altman: 4.4, musk: 4.3, trump: 3.9 },
-  { timestamp: "06:00", altman: 4.3, musk: 4.5, trump: 3.8 },
-  { timestamp: "08:00", altman: 4.7, musk: 4.4, trump: 4.0 },
-  { timestamp: "10:00", altman: 5.1, musk: 4.8, trump: 4.1 },
-  { timestamp: "12:00", altman: 4.9, musk: 5.2, trump: 4.0 },
-  { timestamp: "14:00", altman: 5.4, musk: 5.0, trump: 4.2 },
-  { timestamp: "16:00", altman: 5.8, musk: 5.3, trump: 4.3 },
-  { timestamp: "18:00", altman: 5.6, musk: 5.7, trump: 4.5 },
-  { timestamp: "20:00", altman: 6.2, musk: 5.9, trump: 4.4 },
-  { timestamp: "22:00", altman: 6.8, musk: 6.2, trump: 4.7 },
-  { timestamp: "24:00", altman: 7.2, musk: 6.5, trump: 4.8 },
+  { timestamp: "00:00", altman: 5.2, musk: 4.8, trump: 4.1 },
+  { timestamp: "02:00", altman: 5.0, musk: 5.1, trump: 4.0 },
+  { timestamp: "04:00", altman: 4.7, musk: 5.4, trump: 4.2 },
+  { timestamp: "06:00", altman: 4.5, musk: 5.6, trump: 4.5 },
+  { timestamp: "08:00", altman: 4.8, musk: 5.3, trump: 4.8 },
+  { timestamp: "10:00", altman: 5.2, musk: 5.0, trump: 4.6 },
+  { timestamp: "12:00", altman: 5.5, musk: 4.7, trump: 4.3 },
+  { timestamp: "14:00", altman: 5.3, musk: 4.9, trump: 4.5 },
+  { timestamp: "16:00", altman: 5.0, musk: 5.2, trump: 4.8 },
+  { timestamp: "18:00", altman: 4.8, musk: 5.5, trump: 4.6 },
+  { timestamp: "20:00", altman: 5.1, musk: 5.3, trump: 4.4 },
+  { timestamp: "22:00", altman: 5.4, musk: 5.0, trump: 4.7 },
+  { timestamp: "24:00", altman: 5.2, musk: 5.2, trump: 4.5 },
 ];
 
 // Function to get data points between start and end time
