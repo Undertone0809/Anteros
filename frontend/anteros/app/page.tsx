@@ -59,7 +59,7 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm text-muted-foreground">Volume</div>
-                    <div className="font-medium">$50K</div>
+                    <div className="font-medium">$53K</div>
                   </div>
                   <Button variant="outline" size="sm">Trade Now</Button>
                 </div>
@@ -76,7 +76,7 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-muted-foreground">Volume</div>
-                  <div className="font-medium">$25K</div>
+                  <div className="font-medium">$23.5K</div>
                 </div>
                 <Button variant="outline" size="sm">Coming Soon</Button>
               </div>
@@ -92,7 +92,7 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-muted-foreground">Volume</div>
-                  <div className="font-medium">$30K</div>
+                  <div className="font-medium">$37.2K</div>
                 </div>
                 <Button variant="outline" size="sm">Coming Soon</Button>
               </div>
