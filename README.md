@@ -1,67 +1,87 @@
-## Foundry
+# Anteros 🚀
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## 🏦 The Robinhood of Attention Markets
 
-Foundry consists of:
+Anteros is a groundbreaking platform focused on unlocking the hidden potential of attention markets through tokenization, liquidity, and decentralized prediction models. We're building a new frontier in the world of digital content creators. 🌐✨
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## 🌍 Problem Statement
 
-## Documentation
+The social media world is dominated by a few big names, but most creators can't access the tools they need to monetize their growth. 🔒
 
-https://book.getfoundry.sh/
+- **Top 1%**: Blue-chip KOLs (Liquid but Saturated) 💎
+- **Middle 20%**: Rising creators (No valuation tools) 🌱
+- **Base 79%**: Emerging talents (Illiquid "dark matter") 🌑
 
-## Usage
+92% of Twitter creators are unable to monetize their potential. Current solutions are either too centralized or fragmented, leaving many creators behind. 😕
 
-### Build
+---
 
-```shell
-$ forge build
+## 💡 RLUSD-Powered Solution
+
+Anteros leverages **RLUSD**, a stablecoin designed to power the attention economy. 🔑
+
+### 🌟 Key Features
+
+- **Tokenizing Attention Futures** with RLUSD liquidity 🪙
+- **Hybrid AMM Model**: 
+  - Pool liquidity comes from 70% bettors' RLUSD 🏊‍♂️
+  - 30% LP staking, earning yield from transaction fees 📈
+- **KOL Assetization**: Verified creators receive RLUSD rewards and top performers get grants for content production 🏆
+
+### 📊 Financial Inclusion
+
+- **Minimum Bets**: 0.1 RLUSD to enable cross-border micropayments 🌍
+- **RLUSD as Settlement Layer**: All bets and payouts in RLUSD, empowering creators globally 🌐
+
+---
+
+## 🚀 Start
+
+- **Launch App**: Anteros, the next-gen attention marketplace, is coming soon! 🚀
+- **Join the Community**: Join our Discord for updates, support, and more! 🤝
+
+### 📝 Script
+
+```bash
+npm install
+npm run dev
 ```
 
-### Test
+## 🛡️ Regulatory Edge
 
-```shell
-$ forge test
-```
+Compliance is at our core, with no compromise. 🔐
 
-### Format
+### ✅ KYC Tiers
 
-```shell
-$ forge fmt
-```
+- **Tier 1**: Anonymous bets ≤ 100 RLUSD/day 🔒
+- **Tier 2**: ZK-proof verified for ≥1,000 RLUSD activity 🔑
 
-### Gas Snapshots
+### 🌍 Sanctions Screening
 
-```shell
-$ forge snapshot
-```
+Automated OFAC checks on KOL pools to ensure global compliance 🌏
 
-### Anvil
+### 🎓 Sustainable Design
 
-```shell
-$ anvil
-```
+2% of RLUSD fees fund media literacy programs, empowering the next generation of creators 📚
 
-### Deploy
+---
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+## 📅 Roadmap & Traction
 
-### Cast
+We’re on a mission to build the world’s most inclusive attention marketplace. Here’s our plan to get there:
 
-```shell
-$ cast <subcommand>
-```
+- **Q2 2025**: Core prediction markets for Twitter KOLs, RLUSD integration for bets and payouts 🎯
+- **Q3 2025**: Launch "Alpha Hunter" NFT badges, staking rewards, and social features like leaderboards 🏅
+- **Q4 2025**: Support multi-platform creators (TikTok, Instagram, YouTube), RLUSD <> local fiat off-ramps 💳
 
-### Help
+Looking forward to the global launch and scaling the ecosystem! 🌎
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
-。。。
+---
+
+## 🌱 Join Us in Redefining Social Capital as a Public Good
+
+Let markets decide who deserves the spotlight, and let early believers reap the rewards. 🌟
+
+---
+
+Let’s change the future of social capital together with **Anteros**! 💥
