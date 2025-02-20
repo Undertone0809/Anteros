@@ -20,7 +20,7 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-            
+
             <div className="rounded-xl border bg-card p-6">
               <h3 className="text-xl font-semibold mb-2">Viral Post Predictions</h3>
               <p className="text-muted-foreground mb-4">Will this post reach 1M likes by end of week?</p>
@@ -63,7 +63,7 @@ export default function Home() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold">Next viral TikTok trend prediction</h3>
-                  <p className="text-muted-foreground">Will "AI Fashion" be the next big trend?</p>
+                  <p className="text-muted-foreground">Will &quot;AI Fashion&quot; be the next big trend?</p>
                 </div>
                 <Button variant="outline">Trade</Button>
               </div>
@@ -79,4 +79,3 @@ export default function Home() {
     </div>
   )
 }
-
