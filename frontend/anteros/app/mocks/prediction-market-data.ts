@@ -61,11 +61,13 @@ export const aiSummaries = {
   ],
 };
 
+// Fixed timestamp for consistent rendering
+const FIXED_START_TIME = "2025-02-21T09:44:38.000Z";
+const FIXED_END_TIME = "2025-02-22T09:44:38.000Z";
+
 export const initialMarketState: PredictionMarketState = {
-  currentTime: new Date().toISOString(),
-  endTime: new Date(
-    Date.now() + 23 * 60 * 60 * 1000 + 50 * 60 * 1000
-  ).toISOString(),
+  currentTime: FIXED_START_TIME,
+  endTime: FIXED_END_TIME,
   poolSize: 75852,
   participants: 345,
   options: {
@@ -97,7 +99,7 @@ export const afterBetState: PredictionMarketState = {
   userBet: {
     amount: 110,
     choice: "altman",
-    timestamp: new Date().toISOString(),
+    timestamp: FIXED_START_TIME,
   },
   options: {
     ...initialMarketState.options,
@@ -111,8 +113,8 @@ export const afterBetState: PredictionMarketState = {
 
 export const finalState: PredictionMarketState = {
   ...afterBetState,
-  currentTime: initialMarketState.currentTime,
-  endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  currentTime: FIXED_START_TIME,
+  endTime: FIXED_END_TIME,
   outcome: {
     winner: "altman",
     canClaim: true,
@@ -122,17 +124,17 @@ export const finalState: PredictionMarketState = {
 
 export const mockTimeProgression = [
   {
-    timestamp: new Date().toISOString(),
+    timestamp: FIXED_START_TIME,
     event: "BETTING_STARTED",
     message: "Placed 110 on Altman",
   },
   {
-    timestamp: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    timestamp: "2025-02-21T09:54:38.000Z", // FIXED_START_TIME + 10 minutes
     event: "TIME_UPDATE",
     message: "Market closing soon",
   },
   {
-    timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    timestamp: FIXED_END_TIME,
     event: "MARKET_CLOSED",
     message: "Market closed - Altman wins!",
   },
