@@ -37,7 +37,7 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
             <button
               onClick={() => setSelectedChoice("musk")}
               className={`p-4 rounded-lg border ${selectedChoice === "musk" ? "border-primary bg-primary/10" : "border-border"
-                }`}
+              }`}
             >
               <p className="font-medium">Musk</p>
               <p className="text-sm text-muted-foreground">Odds: {marketState.options.musk.odds}x</p>
@@ -45,12 +45,12 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
             <button
               onClick={() => setSelectedChoice("zuck")}
               className={`p-4 rounded-lg border ${selectedChoice === "zuck" ? "border-primary bg-primary/10" : "border-border"
-                }`}
+              }`}
             >
               <p className="font-medium">Zuck</p>
               <p className="text-sm text-muted-foreground">Odds: {marketState.options.zuck.odds}x</p>
             </button>
-          </div>
+        </div>
         </div>
 
         <div className="space-y-2">

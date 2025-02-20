@@ -92,7 +92,8 @@ export const afterBetState: PredictionMarketState = {
 
 export const finalState: PredictionMarketState = {
   ...afterBetState,
-  currentTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  currentTime: initialMarketState.currentTime,
+  endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   outcome: {
     winner: "musk",
     canClaim: true,
@@ -168,7 +169,11 @@ export const getChartDataForTimeRange = (
     return mockChartData;
   }
 
-  // Otherwise, only show data up to the current hour
-  const currentHourIndex = Math.floor(totalHours / 2); // Every 2 hours we show a data point
-  return mockChartData.slice(0, currentHourIndex + 1);
+  // Calculate how many data points to show based on elapsed time
+  // We show a data point every 2 hours, so divide by 2
+  const dataPointsToShow = Math.max(
+    1,
+    Math.min(Math.ceil(totalHours / 2), mockChartData.length)
+  );
+  return mockChartData.slice(0, dataPointsToShow);
 };

@@ -84,7 +84,7 @@ export default function SocialPreMarket() {
                   onClick={streamAISummary}
                   className="mb-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                 >
-                  Generate AI Prediction
+                  Generate AI Summary
                 </button>
                 {aiSummaryVisible && (
                   <div className="prose dark:prose-invert">
