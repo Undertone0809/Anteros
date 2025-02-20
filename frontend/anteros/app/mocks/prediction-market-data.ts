@@ -121,8 +121,8 @@ export const aiSummaries = {
 };
 
 // Fixed timestamp for consistent rendering
-const FIXED_START_TIME = "2025-02-21T09:44:38.000Z";
-const FIXED_END_TIME = "2025-02-22T09:44:38.000Z";
+const FIXED_START_TIME = "2025-02-19T09:44:38.000Z";
+const FIXED_END_TIME = "2025-02-20T09:44:38.000Z";
 
 // Market events that affect odds
 const marketEvents = [
