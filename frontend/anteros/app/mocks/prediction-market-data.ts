@@ -4,47 +4,60 @@ export interface PredictionMarketState {
   poolSize: number;
   participants: number;
   options: {
+    altman: {
+      odds: number;
+      totalBets: number;
+      supporters: number;
+    };
     musk: {
       odds: number;
       totalBets: number;
       supporters: number;
     };
-    zuck: {
+    trump: {
       odds: number;
       totalBets: number;
       supporters: number;
     };
   };
   potentialReturns: {
+    altman: number;
     musk: number;
-    zuck: number;
+    trump: number;
   };
   userBet?: {
     amount: number;
-    choice: "musk" | "zuck";
+    choice: "altman" | "musk" | "trump";
     timestamp: string;
   };
   outcome?: {
-    winner: "musk" | "zuck";
+    winner: "altman" | "musk" | "trump";
     canClaim: boolean;
     reward?: number;
   };
 }
 
 export const aiSummaries = {
-  musk: [
-    "Based on recent social media activity analysis",
-    "Musk's engagement metrics show strong momentum",
-    "Historical pattern suggests higher probability of success",
-    "Market sentiment analysis indicates positive trajectory",
-    "Technical indicators align with bullish prediction",
+  altman: [
+    "OpenAI's strategic positioning shows promise",
+    "Recent AI developments indicate strong momentum",
+    "Market leadership in AI sector suggests advantage",
+    "Technical innovations align with positive trajectory",
+    "Industry partnerships reveal strategic strength",
   ],
-  zuck: [
-    "Meta's recent performance metrics indicate",
-    "Platform growth statistics show promising trends",
-    "User engagement data suggests potential advantage",
-    "Market positioning appears favorable",
-    "Competitive analysis reveals strategic edge",
+  musk: [
+    "Tesla and X platform performance metrics",
+    "Multi-company synergy shows potential",
+    "Market influence remains strong",
+    "Technical innovations across ventures",
+    "Strategic positioning in AI and automotive",
+  ],
+  trump: [
+    "Political momentum analysis indicates",
+    "Social media engagement metrics show trends",
+    "Historical pattern analysis suggests",
+    "Public sentiment data reveals",
+    "Campaign performance metrics indicate",
   ],
 };
 
@@ -53,23 +66,29 @@ export const initialMarketState: PredictionMarketState = {
   endTime: new Date(
     Date.now() + 23 * 60 * 60 * 1000 + 50 * 60 * 1000
   ).toISOString(),
-  poolSize: 50000,
-  participants: 234,
+  poolSize: 75000,
+  participants: 345,
   options: {
+    altman: {
+      odds: 2.15,
+      totalBets: 25000,
+      supporters: 115,
+    },
     musk: {
-      odds: 1.85,
+      odds: 1.95,
       totalBets: 28000,
       supporters: 145,
     },
-    zuck: {
-      odds: 2.15,
+    trump: {
+      odds: 2.35,
       totalBets: 22000,
-      supporters: 89,
+      supporters: 85,
     },
   },
   potentialReturns: {
-    musk: 203.5, // Return for 110 bet
-    zuck: 236.5,
+    altman: 236.5,
+    musk: 214.5,
+    trump: 258.5,
   },
 };
 
@@ -77,15 +96,15 @@ export const afterBetState: PredictionMarketState = {
   ...initialMarketState,
   userBet: {
     amount: 110,
-    choice: "musk",
+    choice: "altman",
     timestamp: new Date().toISOString(),
   },
   options: {
     ...initialMarketState.options,
-    musk: {
-      ...initialMarketState.options.musk,
-      totalBets: initialMarketState.options.musk.totalBets + 110,
-      supporters: initialMarketState.options.musk.supporters + 1,
+    altman: {
+      ...initialMarketState.options.altman,
+      totalBets: initialMarketState.options.altman.totalBets + 110,
+      supporters: initialMarketState.options.altman.supporters + 1,
     },
   },
 };
@@ -95,9 +114,9 @@ export const finalState: PredictionMarketState = {
   currentTime: initialMarketState.currentTime,
   endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   outcome: {
-    winner: "musk",
+    winner: "altman",
     canClaim: true,
-    reward: 203.5,
+    reward: 236.5,
   },
 };
 
@@ -105,7 +124,7 @@ export const mockTimeProgression = [
   {
     timestamp: new Date().toISOString(),
     event: "BETTING_STARTED",
-    message: "Placed 110 on Musk",
+    message: "Placed 110 on Altman",
   },
   {
     timestamp: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -115,42 +134,43 @@ export const mockTimeProgression = [
   {
     timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     event: "MARKET_CLOSED",
-    message: "Market closed - Musk wins!",
+    message: "Market closed - Altman wins!",
   },
 ];
 
 export const streamingAISummary = {
   chunks: [
     "Analyzing recent market data and social indicators...",
-    "Musk's recent product launches have shown strong market reception...",
+    "Altman's recent product launches have shown strong market reception...",
     "Social sentiment analysis indicates positive momentum...",
     "Technical indicators suggest favorable conditions...",
     "Historical pattern analysis supports a bullish outlook...",
-    "Prediction: 68% probability of positive outcome for Musk position",
+    "Prediction: 68% probability of positive outcome for Altman position",
   ],
   delay: 100, // ms between chunks
 };
 
 export interface ChartDataPoint {
   timestamp: string;
+  altman: number;
   musk: number;
-  zuck: number;
+  trump: number;
 }
 
 export const mockChartData: ChartDataPoint[] = [
-  { timestamp: "00:00", musk: 4.2, zuck: 4.0 },
-  { timestamp: "02:00", musk: 4.3, zuck: 4.1 },
-  { timestamp: "04:00", musk: 4.5, zuck: 4.0 },
-  { timestamp: "06:00", musk: 4.8, zuck: 4.2 },
-  { timestamp: "08:00", musk: 5.0, zuck: 4.3 },
-  { timestamp: "10:00", musk: 5.2, zuck: 4.4 },
-  { timestamp: "12:00", musk: 5.5, zuck: 4.5 },
-  { timestamp: "14:00", musk: 5.8, zuck: 4.6 },
-  { timestamp: "16:00", musk: 6.0, zuck: 4.7 },
-  { timestamp: "18:00", musk: 6.2, zuck: 4.8 },
-  { timestamp: "20:00", musk: 6.5, zuck: 4.9 },
-  { timestamp: "22:00", musk: 6.8, zuck: 5.0 },
-  { timestamp: "24:00", musk: 7.0, zuck: 5.1 },
+  { timestamp: "00:00", altman: 4.0, musk: 4.2, trump: 3.8 },
+  { timestamp: "02:00", altman: 4.2, musk: 4.3, trump: 3.9 },
+  { timestamp: "04:00", altman: 4.5, musk: 4.5, trump: 4.0 },
+  { timestamp: "06:00", altman: 4.8, musk: 4.8, trump: 4.1 },
+  { timestamp: "08:00", altman: 5.1, musk: 5.0, trump: 4.2 },
+  { timestamp: "10:00", altman: 5.4, musk: 5.2, trump: 4.3 },
+  { timestamp: "12:00", altman: 5.7, musk: 5.5, trump: 4.4 },
+  { timestamp: "14:00", altman: 6.0, musk: 5.8, trump: 4.5 },
+  { timestamp: "16:00", altman: 6.3, musk: 6.0, trump: 4.6 },
+  { timestamp: "18:00", altman: 6.6, musk: 6.2, trump: 4.7 },
+  { timestamp: "20:00", altman: 6.9, musk: 6.5, trump: 4.8 },
+  { timestamp: "22:00", altman: 7.2, musk: 6.8, trump: 4.9 },
+  { timestamp: "24:00", altman: 7.5, musk: 7.0, trump: 5.0 },
 ];
 
 // Function to get data points between start and end time

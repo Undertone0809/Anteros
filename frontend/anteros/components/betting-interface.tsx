@@ -33,24 +33,32 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <Label>Who will grow fastest?</Label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <button
+              onClick={() => setSelectedChoice("altman")}
+              className={`p-4 rounded-lg border ${selectedChoice === "altman" ? "border-primary bg-primary/10" : "border-border"
+                }`}
+            >
+              <p className="font-medium">Altman</p>
+              <p className="text-sm text-muted-foreground">Odds: {marketState.options.altman.odds}x</p>
+            </button>
             <button
               onClick={() => setSelectedChoice("musk")}
               className={`p-4 rounded-lg border ${selectedChoice === "musk" ? "border-primary bg-primary/10" : "border-border"
-              }`}
+                }`}
             >
               <p className="font-medium">Musk</p>
               <p className="text-sm text-muted-foreground">Odds: {marketState.options.musk.odds}x</p>
             </button>
             <button
-              onClick={() => setSelectedChoice("zuck")}
-              className={`p-4 rounded-lg border ${selectedChoice === "zuck" ? "border-primary bg-primary/10" : "border-border"
-              }`}
+              onClick={() => setSelectedChoice("trump")}
+              className={`p-4 rounded-lg border ${selectedChoice === "trump" ? "border-primary bg-primary/10" : "border-border"
+                }`}
             >
-              <p className="font-medium">Zuck</p>
-              <p className="text-sm text-muted-foreground">Odds: {marketState.options.zuck.odds}x</p>
+              <p className="font-medium">Trump</p>
+              <p className="text-sm text-muted-foreground">Odds: {marketState.options.trump.odds}x</p>
             </button>
-        </div>
+          </div>
         </div>
 
         <div className="space-y-2">
