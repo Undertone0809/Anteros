@@ -26,6 +26,19 @@ import {
   Activity
 } from "lucide-react";
 
+function formatDate(date: Date | string) {
+  const d = new Date(date);
+  return d.toLocaleString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+}
+
 export default function SocialPreMarket() {
   const [marketState, setMarketState] =
     useState<PredictionMarketState>(initialMarketState);
@@ -92,7 +105,7 @@ export default function SocialPreMarket() {
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="px-4 py-1.5">
                 <Clock className="w-4 h-4 mr-2" />
-                {new Date(marketState.endTime).toLocaleString()}
+                {formatDate(marketState.endTime)}
               </Badge>
               <Badge variant="outline" className="px-4 py-1.5">
                 <Users className="w-4 h-4 mr-2" />

@@ -4,3 +4,24 @@ globs: *.tsx
 ---
 # Fontend rules
 This project use nextjs, shadcn, tailwind, framer motion to build website.
+
+
+---
+Attention the following error:
+Unhandled Runtime Error
+Error: Text content does not match server-rendered HTML.
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+Text content did not match. Server: "2025/2/21 09:42:02" Client: "21/02/2025, 09:42:03"
+
+
+...
+  <main>
+    <div>
+      <div>
+        <div>
+          <Badge>
+            <div>
+              "2025/2/21 09:42:02"
+              "21/02/2025, 09:42:03"
+Call Stack

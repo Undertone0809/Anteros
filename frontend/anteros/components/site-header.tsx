@@ -102,7 +102,7 @@ export default function SiteHeader() {
                 <div className="space-y-4">
                   <div className="border-b pb-2">
                     <p className="text-sm font-medium">Your Account</p>
-                    <p className="text-xs text-muted-foreground">0x1234...5678</p>
+                    <p className="text-xs text-muted-foreground">0x4s2Jx...kZ2c</p>
                   </div>
                   <div className="space-y-1">
                     <Button variant="ghost" size="sm" className="w-full justify-start">
