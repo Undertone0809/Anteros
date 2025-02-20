@@ -63,6 +63,8 @@ export default function SocialPreMarket() {
 
   // Simulate AI summary streaming
   const streamAISummary = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     setAiSummaryVisible(true);
     setAiSummaryText("");
 
@@ -81,6 +83,7 @@ export default function SocialPreMarket() {
         amount,
         choice,
         timestamp: new Date().toISOString(),
+        position: "long",
       },
     });
   };

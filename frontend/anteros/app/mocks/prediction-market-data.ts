@@ -3,21 +3,34 @@ export interface PredictionMarketState {
   endTime: string;
   poolSize: number;
   participants: number;
+  timeframe: "24h" | "7d" | "30d" | "90d" | "1y";
   options: {
     altman: {
       odds: number;
       totalBets: number;
       supporters: number;
+      historicalOdds?: {
+        timestamp: string;
+        odds: number;
+      }[];
     };
     musk: {
       odds: number;
       totalBets: number;
       supporters: number;
+      historicalOdds?: {
+        timestamp: string;
+        odds: number;
+      }[];
     };
     trump: {
       odds: number;
       totalBets: number;
       supporters: number;
+      historicalOdds?: {
+        timestamp: string;
+        odds: number;
+      }[];
     };
   };
   potentialReturns: {
@@ -29,6 +42,7 @@ export interface PredictionMarketState {
     amount: number;
     choice: "altman" | "musk" | "trump";
     timestamp: string;
+    position: "long" | "short";
   };
   outcome?: {
     winner: "altman" | "musk" | "trump";
@@ -65,26 +79,172 @@ export const aiSummaries = {
 const FIXED_START_TIME = "2025-02-21T09:44:38.000Z";
 const FIXED_END_TIME = "2025-02-22T09:44:38.000Z";
 
+// Market events that affect odds
+const marketEvents = [
+  {
+    date: "2024-02-21",
+    event: "OpenAI announces GPT-5",
+    impact: { altman: 0.3, musk: -0.15, trump: -0.05 },
+  },
+  {
+    date: "2024-03-15",
+    event: "Tesla's AI Day",
+    impact: { altman: -0.1, musk: 0.25, trump: 0 },
+  },
+  {
+    date: "2024-04-01",
+    event: "Major social media policy changes",
+    impact: { altman: 0.05, musk: 0.2, trump: 0.15 },
+  },
+  {
+    date: "2024-05-10",
+    event: "AI regulation announcement",
+    impact: { altman: -0.15, musk: -0.1, trump: 0.2 },
+  },
+];
+
+// Utility function to add noise to the trend
+const addNoise = (baseValue: number, volatility: number = 0.05) => {
+  const noise = (Math.random() - 0.5) * volatility;
+  return baseValue * (1 + noise);
+};
+
+// Generate realistic trend with momentum
+const generateTrend = (
+  days: number,
+  initialValue: number,
+  momentum: number = 0.7
+) => {
+  const trend: number[] = [];
+  let currentValue = initialValue;
+  let direction = Math.random() > 0.5 ? 1 : -1;
+  let momentumCounter = Math.floor(Math.random() * 5) + 3; // 3-7 days momentum
+
+  for (let i = 0; i < days; i++) {
+    // Change direction with momentum
+    if (momentumCounter <= 0) {
+      direction = Math.random() > 0.5 ? 1 : -1;
+      momentumCounter = Math.floor(Math.random() * 5) + 3;
+    }
+
+    // Add trend with momentum and noise
+    currentValue = addNoise(currentValue * (1 + direction * 0.01 * momentum));
+
+    // Ensure odds don't go below 1.1 or above 5.0
+    currentValue = Math.max(1.1, Math.min(5.0, currentValue));
+
+    trend.push(currentValue);
+    momentumCounter--;
+  }
+
+  return trend;
+};
+
+// Generate historical data points with proper granularity
+const generateHistoricalOdds = (
+  baseOdds: number,
+  personality: "altman" | "musk" | "trump"
+) => {
+  const points: { timestamp: string; odds: number }[] = [];
+  const now = new Date();
+  const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+  // Generate daily trend for a year
+  const trend = generateTrend(
+    365,
+    baseOdds,
+    personality === "trump" ? 0.9 : 0.7
+  );
+
+  // Apply market events impact
+  const eventImpacts = new Map<string, number>();
+  marketEvents.forEach((event) => {
+    eventImpacts.set(event.date, event.impact[personality]);
+  });
+
+  // Generate data points with different granularity
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(yearAgo);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split("T")[0];
+
+    // Apply event impact if exists
+    let odds = trend[i];
+    if (eventImpacts.has(dateStr)) {
+      odds *= 1 + eventImpacts.get(dateStr)!;
+    }
+
+    // For recent data (last 24h), generate hourly data points
+    if (i === 364) {
+      for (let hour = 0; hour < 24; hour++) {
+        const hourDate = new Date(date);
+        hourDate.setHours(hour);
+        points.push({
+          timestamp: hourDate.toISOString(),
+          odds: addNoise(odds, 0.02), // Lower volatility for hourly data
+        });
+      }
+    } else {
+      points.push({
+        timestamp: date.toISOString(),
+        odds: odds,
+      });
+    }
+  }
+
+  return points;
+};
+
+// Generate mock chart data with realistic patterns
+const generateMockChartData = (): ChartDataPoint[] => {
+  const data: ChartDataPoint[] = [];
+  const baseValues = {
+    altman: 5.2,
+    musk: 4.8,
+    trump: 4.1,
+  };
+
+  for (let hour = 0; hour < 25; hour++) {
+    const timestamp = hour.toString().padStart(2, "0") + ":00";
+    const volatility = 0.03; // 3% volatility
+
+    data.push({
+      timestamp,
+      altman: addNoise(baseValues.altman, volatility),
+      musk: addNoise(baseValues.musk, volatility),
+      trump: addNoise(baseValues.trump, volatility),
+    });
+  }
+
+  return data;
+};
+
+export const mockChartData = generateMockChartData();
+
 export const initialMarketState: PredictionMarketState = {
   currentTime: FIXED_START_TIME,
   endTime: FIXED_END_TIME,
   poolSize: 124876.52,
   participants: 892,
+  timeframe: "24h",
   options: {
     altman: {
       odds: 1.85,
       totalBets: 47892.31,
       supporters: 312,
+      historicalOdds: generateHistoricalOdds(1.85, "altman"),
     },
     musk: {
       odds: 2.45,
       totalBets: 41765.84,
       supporters: 285,
+      historicalOdds: generateHistoricalOdds(2.45, "musk"),
     },
     trump: {
       odds: 3.15,
       totalBets: 35218.37,
       supporters: 295,
+      historicalOdds: generateHistoricalOdds(3.15, "trump"),
     },
   },
   potentialReturns: {
@@ -100,6 +260,7 @@ export const afterBetState: PredictionMarketState = {
     amount: 110.5,
     choice: "altman",
     timestamp: FIXED_START_TIME,
+    position: "long",
   },
   options: {
     ...initialMarketState.options,
@@ -158,22 +319,6 @@ export interface ChartDataPoint {
   trump: number;
 }
 
-export const mockChartData: ChartDataPoint[] = [
-  { timestamp: "00:00", altman: 5.2, musk: 4.8, trump: 4.1 },
-  { timestamp: "02:00", altman: 5.0, musk: 5.1, trump: 4.0 },
-  { timestamp: "04:00", altman: 4.7, musk: 5.4, trump: 4.2 },
-  { timestamp: "06:00", altman: 4.5, musk: 5.6, trump: 4.5 },
-  { timestamp: "08:00", altman: 4.8, musk: 5.3, trump: 4.8 },
-  { timestamp: "10:00", altman: 5.2, musk: 5.0, trump: 4.6 },
-  { timestamp: "12:00", altman: 5.5, musk: 4.7, trump: 4.3 },
-  { timestamp: "14:00", altman: 5.3, musk: 4.9, trump: 4.5 },
-  { timestamp: "16:00", altman: 5.0, musk: 5.2, trump: 4.8 },
-  { timestamp: "18:00", altman: 4.8, musk: 5.5, trump: 4.6 },
-  { timestamp: "20:00", altman: 5.1, musk: 5.3, trump: 4.4 },
-  { timestamp: "22:00", altman: 5.4, musk: 5.0, trump: 4.7 },
-  { timestamp: "24:00", altman: 5.2, musk: 5.2, trump: 4.5 },
-];
-
 // Function to get data points between start and end time
 export const getChartDataForTimeRange = (
   startTime: string,
@@ -197,4 +342,37 @@ export const getChartDataForTimeRange = (
     Math.min(Math.ceil(totalHours / 2), mockChartData.length)
   );
   return mockChartData.slice(0, dataPointsToShow);
+};
+
+// Function to get historical data points for a specific timeframe
+export const getHistoricalDataForTimeframe = (
+  timeframe: PredictionMarketState["timeframe"],
+  historicalOdds: { timestamp: string; odds: number }[]
+) => {
+  const now = new Date();
+  let startDate: Date;
+
+  switch (timeframe) {
+    case "24h":
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case "7d":
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "30d":
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case "90d":
+      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case "1y":
+      startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  }
+
+  return historicalOdds.filter(
+    (point) => new Date(point.timestamp) >= startDate
+  );
 };

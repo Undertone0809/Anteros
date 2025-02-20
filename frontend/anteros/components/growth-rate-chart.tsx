@@ -1,153 +1,155 @@
 "use client"
 
-import { Line } from "react-chartjs-2"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartDataset,
-  ScriptableContext,
-  TooltipItem,
-} from "chart.js"
-import annotationPlugin from 'chartjs-plugin-annotation'
-import { PredictionMarketState, getChartDataForTimeRange } from "@/app/mocks/prediction-market-data"
 import { useState, useEffect } from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { RefreshCw } from "lucide-react"
+import { PredictionMarketState, getHistoricalDataForTimeframe } from "@/app/mocks/prediction-market-data"
+import dynamic from 'next/dynamic'
+import { Chart as ChartJS, ChartData, LineElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale } from 'chart.js'
+import { Line } from 'react-chartjs-2'
+import { TooltipItem } from 'chart.js'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  annotationPlugin
+const LineChart = dynamic(
+  () => import('react-chartjs-2').then((mod) => mod.Line),
+  { ssr: false }
 )
+
+// Dynamically import Chart.js components
+const initChartJS = async () => {
+  const { Chart: ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, TimeScale } = await import('chart.js')
+  const zoomPlugin = (await import('chartjs-plugin-zoom')).default
+
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    TimeScale,
+    Title,
+    Tooltip,
+    Legend,
+    zoomPlugin
+  )
+}
 
 interface GrowthRateChartProps {
   marketState: PredictionMarketState
 }
 
+// Calculate growth rate between two points
+const calculateGrowthRate = (current: number, previous: number): number => {
+  return ((current - previous) / previous) * 100;
+};
+
+// Calculate growth rates for a series of values
+const calculateGrowthRates = (data: { timestamp: string; odds: number }[]): { timestamp: string; rate: number }[] => {
+  const rates: { timestamp: string; rate: number }[] = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const rate = calculateGrowthRate(data[i].odds, data[i - 1].odds);
+    rates.push({
+      timestamp: data[i].timestamp,
+      rate: rate,
+    });
+  }
+
+  return rates;
+};
+
 export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
-  const [currentTimeDisplay, setCurrentTimeDisplay] = useState("")
-  const [endTimeDisplay, setEndTimeDisplay] = useState("")
+  const [isClient, setIsClient] = useState(false)
+  const [timeframe, setTimeframe] = useState<PredictionMarketState["timeframe"]>(marketState.timeframe)
+  const [chartType, setChartType] = useState<"growth" | "odds">("growth")
+  const [chartInstance, setChartInstance] = useState<ChartJS | null>(null)
 
   useEffect(() => {
-    // Update the time displays after component mounts (client-side only)
-    setCurrentTimeDisplay(new Date(marketState.currentTime).toISOString().slice(11, 19))
-    setEndTimeDisplay(new Date(marketState.endTime).toISOString().slice(11, 19))
-  }, [marketState.currentTime, marketState.endTime])
+    const init = async () => {
+      await initChartJS()
+      setIsClient(true)
+    }
+    init()
+  }, [])
 
-  const chartData = getChartDataForTimeRange(marketState.currentTime, marketState.endTime)
+  // Get historical data for the selected timeframe
+  const historicalData = {
+    altman: getHistoricalDataForTimeframe(timeframe, marketState.options.altman.historicalOdds || []),
+    musk: getHistoricalDataForTimeframe(timeframe, marketState.options.musk.historicalOdds || []),
+    trump: getHistoricalDataForTimeframe(timeframe, marketState.options.trump.historicalOdds || []),
+  }
 
-  // Find the bet time index in the data
-  const betTimeIndex = marketState.userBet
-    ? chartData.findIndex(point => {
-      const betHour = new Date(marketState.userBet!.timestamp).getHours()
-      const [pointHour] = point.timestamp.split(":").map(Number)
-      return betHour <= pointHour
-    })
-    : -1;
+  // Calculate growth rates
+  const growthRates = {
+    altman: calculateGrowthRates(historicalData.altman),
+    musk: calculateGrowthRates(historicalData.musk),
+    trump: calculateGrowthRates(historicalData.trump),
+  }
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const pad = (n: number) => n.toString().padStart(2, '0')
+
+    const hours = pad(date.getHours())
+    const minutes = pad(date.getMinutes())
+    const day = pad(date.getDate())
+    const month = pad(date.getMonth() + 1)
+    const year = date.getFullYear()
+
+    switch (timeframe) {
+      case "24h":
+        return `${hours}:${minutes}`
+      case "7d":
+        return `${year}/${month}/${day} ${hours}:${minutes}`
+      default:
+        return `${year}/${month}/${day}`
+    }
+  }
+
+  const handleResetZoom = () => {
+    if (chartInstance) {
+      chartInstance.resetZoom?.()
+    }
+  }
 
   const data = {
-    labels: chartData.map(point => point.timestamp),
+    labels: chartType === "growth"
+      ? growthRates.altman.map(point => formatTimestamp(point.timestamp))
+      : historicalData.altman.map(point => formatTimestamp(point.timestamp)),
     datasets: [
       {
         label: "Altman",
-        data: chartData.map(point => point.altman),
+        data: chartType === "growth"
+          ? growthRates.altman.map(point => point.rate)
+          : historicalData.altman.map(point => point.odds),
         borderColor: "rgb(75, 192, 192)",
         backgroundColor: "rgba(75, 192, 192, 0.5)",
-        pointRadius: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'altman' && ctx.dataIndex === betTimeIndex) {
-            return 8;
-          }
-          return 3;
-        },
-        pointBackgroundColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'altman' && ctx.dataIndex === betTimeIndex) {
-            return 'rgba(75, 192, 192, 0.8)';
-          }
-          return "rgb(75, 192, 192)";
-        },
-        pointBorderColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'altman' && ctx.dataIndex === betTimeIndex) {
-            return 'white';
-          }
-          return "rgb(75, 192, 192)";
-        },
-        pointBorderWidth: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'altman' && ctx.dataIndex === betTimeIndex) {
-            return 2;
-          }
-          return 1;
-        },
-      } as ChartDataset<"line">,
+        tension: 0.4,
+        pointRadius: 1,
+        borderWidth: 2,
+      },
       {
         label: "Musk",
-        data: chartData.map(point => point.musk),
+        data: chartType === "growth"
+          ? growthRates.musk.map(point => point.rate)
+          : historicalData.musk.map(point => point.odds),
         borderColor: "rgb(53, 162, 235)",
         backgroundColor: "rgba(53, 162, 235, 0.5)",
-        pointRadius: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'musk' && ctx.dataIndex === betTimeIndex) {
-            return 8;
-          }
-          return 3;
-        },
-        pointBackgroundColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'musk' && ctx.dataIndex === betTimeIndex) {
-            return 'rgba(53, 162, 235, 0.8)';
-          }
-          return "rgb(53, 162, 235)";
-        },
-        pointBorderColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'musk' && ctx.dataIndex === betTimeIndex) {
-            return 'white';
-          }
-          return "rgb(53, 162, 235)";
-        },
-        pointBorderWidth: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'musk' && ctx.dataIndex === betTimeIndex) {
-            return 2;
-          }
-          return 1;
-        },
-      } as ChartDataset<"line">,
+        tension: 0.4,
+        pointRadius: 1,
+        borderWidth: 2,
+      },
       {
         label: "Trump",
-        data: chartData.map(point => point.trump),
+        data: chartType === "growth"
+          ? growthRates.trump.map(point => point.rate)
+          : historicalData.trump.map(point => point.odds),
         borderColor: "rgb(255, 99, 132)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
-        pointRadius: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'trump' && ctx.dataIndex === betTimeIndex) {
-            return 8;
-          }
-          return 3;
-        },
-        pointBackgroundColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'trump' && ctx.dataIndex === betTimeIndex) {
-            return 'rgba(255, 99, 132, 0.8)';
-          }
-          return "rgb(255, 99, 132)";
-        },
-        pointBorderColor: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'trump' && ctx.dataIndex === betTimeIndex) {
-            return 'white';
-          }
-          return "rgb(255, 99, 132)";
-        },
-        pointBorderWidth: (ctx: ScriptableContext<"line">) => {
-          if (marketState.userBet?.choice === 'trump' && ctx.dataIndex === betTimeIndex) {
-            return 2;
-          }
-          return 1;
-        },
-      } as ChartDataset<"line">,
+        tension: 0.4,
+        pointRadius: 1,
+        borderWidth: 2,
+      },
     ],
   }
 
@@ -163,48 +165,119 @@ export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
       },
       title: {
         display: true,
-        text: "Growth Rate Comparison (%/hour)",
+        text: chartType === "growth" ? "Growth Rate Comparison (%)" : "Historical Odds",
+      },
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: 'x' as const,
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: 'x' as const,
+        },
       },
       tooltip: {
         callbacks: {
-          label: (context: TooltipItem<"line">) => {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y;
-            if (marketState.userBet && context.dataIndex === betTimeIndex && label.toLowerCase() === marketState.userBet.choice) {
-              return `${label}: ${value}% (Bet: ${marketState.userBet.amount})`;
+          label: function (tooltipItem: TooltipItem<"line">) {
+            const value = tooltipItem.parsed.y;
+            if (chartType === "growth") {
+              return `${tooltipItem.dataset.label || ''}: ${value.toFixed(2)}%`;
             }
-            return `${label}: ${value}%`;
+            return `${tooltipItem.dataset.label || ''}: ${value.toFixed(3)}`;
           }
         }
       }
     },
     scales: {
+      x: {
+        type: 'category' as const,
+        display: true,
+        title: {
+          display: true,
+          text: 'Time',
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+        },
+      },
       y: {
         type: "linear" as const,
         display: true,
         position: "left" as const,
         title: {
           display: true,
-          text: "Growth Rate (%)",
+          text: chartType === "growth" ? "Growth Rate (%)" : "Odds",
         },
-        min: 3.5,
-        max: 7.5,
+        min: chartType === "growth" ? -5 : 1.0,
+        max: chartType === "growth" ? 5 : 5.0,
       },
     },
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Real-time Growth Rate Comparison</CardTitle>
-        <div className="text-sm text-muted-foreground">
-          {currentTimeDisplay} - {endTimeDisplay}
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle>Real-time Market Data</CardTitle>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setChartType("growth")}
+              className={chartType !== "growth" ? "opacity-50" : ""}
+            >
+              Growth Rate
+            </Button>
+            <Button
+              onClick={() => setChartType("odds")}
+              className={chartType !== "odds" ? "opacity-50" : ""}
+            >
+              Odds
+            </Button>
+            <Button
+              onClick={handleResetZoom}
+              className="gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset Zoom
+            </Button>
+          </div>
+          <Select value={timeframe} onValueChange={(value) => setTimeframe(value as PredictionMarketState["timeframe"])}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Timeframe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24h">24h</SelectItem>
+              <SelectItem value="7d">7d</SelectItem>
+              <SelectItem value="30d">30d</SelectItem>
+              <SelectItem value="90d">90d</SelectItem>
+              <SelectItem value="1y">1y</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
-        <Line options={options} data={data} />
+        {!isClient ? (
+          <div className="h-[400px] flex items-center justify-center">
+            <div className="h-8 w-8 animate-spin">Loading...</div>
+          </div>
+        ) : (
+          <LineChart
+            options={options}
+            data={data}
+            ref={(reference) => {
+              if (reference) {
+                setChartInstance(reference as ChartJS)
+              }
+            }}
+          />
+        )}
       </CardContent>
     </Card>
   )
 }
-
