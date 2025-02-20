@@ -12,12 +12,12 @@ import { PredictionMarketState } from "@/app/mocks/prediction-market-data"
 
 interface BettingInterfaceProps {
   marketState: PredictionMarketState
-  onBet: (amount: number, choice: "musk" | "zuck") => void
+  onBet: (amount: number, choice: "altman" | "musk" | "trump") => void
 }
 
 export default function BettingInterface({ marketState, onBet }: BettingInterfaceProps) {
   const [amount, setAmount] = useState(110)
-  const [selectedChoice, setSelectedChoice] = useState<"musk" | "zuck" | null>(null)
+  const [selectedChoice, setSelectedChoice] = useState<"altman" | "musk" | "trump" | null>(null)
 
   const handleBet = () => {
     if (selectedChoice && amount > 0) {

@@ -42,7 +42,7 @@ export default function SocialPreMarket() {
     }
   };
 
-  const handleBet = (amount: number, choice: "musk" | "zuck") => {
+  const handleBet = (amount: number, choice: "altman" | "musk" | "trump") => {
     setMarketState({
       ...afterBetState,
       userBet: {
@@ -84,7 +84,7 @@ export default function SocialPreMarket() {
                   onClick={streamAISummary}
                   className="mb-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                 >
-                  Generate AI Summary
+                  Generate AI Prediction
                 </button>
                 {aiSummaryVisible && (
                   <div className="prose dark:prose-invert">

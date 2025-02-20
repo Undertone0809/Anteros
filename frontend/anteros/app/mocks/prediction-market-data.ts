@@ -159,18 +159,18 @@ export interface ChartDataPoint {
 
 export const mockChartData: ChartDataPoint[] = [
   { timestamp: "00:00", altman: 4.0, musk: 4.2, trump: 3.8 },
-  { timestamp: "02:00", altman: 4.2, musk: 4.3, trump: 3.9 },
-  { timestamp: "04:00", altman: 4.5, musk: 4.5, trump: 4.0 },
-  { timestamp: "06:00", altman: 4.8, musk: 4.8, trump: 4.1 },
-  { timestamp: "08:00", altman: 5.1, musk: 5.0, trump: 4.2 },
-  { timestamp: "10:00", altman: 5.4, musk: 5.2, trump: 4.3 },
-  { timestamp: "12:00", altman: 5.7, musk: 5.5, trump: 4.4 },
-  { timestamp: "14:00", altman: 6.0, musk: 5.8, trump: 4.5 },
-  { timestamp: "16:00", altman: 6.3, musk: 6.0, trump: 4.6 },
-  { timestamp: "18:00", altman: 6.6, musk: 6.2, trump: 4.7 },
-  { timestamp: "20:00", altman: 6.9, musk: 6.5, trump: 4.8 },
-  { timestamp: "22:00", altman: 7.2, musk: 6.8, trump: 4.9 },
-  { timestamp: "24:00", altman: 7.5, musk: 7.0, trump: 5.0 },
+  { timestamp: "02:00", altman: 4.1, musk: 4.0, trump: 3.7 },
+  { timestamp: "04:00", altman: 4.4, musk: 4.3, trump: 3.9 },
+  { timestamp: "06:00", altman: 4.3, musk: 4.5, trump: 3.8 },
+  { timestamp: "08:00", altman: 4.7, musk: 4.4, trump: 4.0 },
+  { timestamp: "10:00", altman: 5.1, musk: 4.8, trump: 4.1 },
+  { timestamp: "12:00", altman: 4.9, musk: 5.2, trump: 4.0 },
+  { timestamp: "14:00", altman: 5.4, musk: 5.0, trump: 4.2 },
+  { timestamp: "16:00", altman: 5.8, musk: 5.3, trump: 4.3 },
+  { timestamp: "18:00", altman: 5.6, musk: 5.7, trump: 4.5 },
+  { timestamp: "20:00", altman: 6.2, musk: 5.9, trump: 4.4 },
+  { timestamp: "22:00", altman: 6.8, musk: 6.2, trump: 4.7 },
+  { timestamp: "24:00", altman: 7.2, musk: 6.5, trump: 4.8 },
 ];
 
 // Function to get data points between start and end time

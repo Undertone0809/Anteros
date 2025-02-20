@@ -1,0 +1,6 @@
+---
+description: frontend project rules
+globs: *.tsx
+---
+# Fontend rules
+This project use nextjs, shadcn, tailwind, framer motion to build website.
