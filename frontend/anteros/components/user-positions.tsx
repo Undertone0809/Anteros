@@ -3,17 +3,10 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { PredictionMarketState } from "@/app/mocks/prediction-market-data"
-
-interface Bet {
-  prediction: string
-  amount: number
-  duration: string
-  timestamp: number
-  status: "active" | "won" | "lost"
-  reward?: number
-}
+import { TrendingUp, TrendingDown, Clock, DollarSign, Target, AlertCircle } from "lucide-react"
 
 interface UserPositionsProps {
   userBet?: PredictionMarketState['userBet']
@@ -22,62 +15,134 @@ interface UserPositionsProps {
 }
 
 export default function UserPositions({ userBet, outcome, onClaim }: UserPositionsProps) {
-  const [currentBet, setCurrentBet] = useState<Bet | null>(null)
+  const [pnl, setPnl] = useState<number>(0)
+  const [pnlPercentage, setPnlPercentage] = useState<number>(0)
 
   useEffect(() => {
-    const storedBet = localStorage.getItem("currentBet")
-    if (storedBet) {
-      setCurrentBet(JSON.parse(storedBet))
+    if (userBet && outcome) {
+      const initialValue = userBet.amount
+      const finalValue = outcome.reward || 0
+      const pnlValue = finalValue - initialValue
+      setPnl(pnlValue)
+      setPnlPercentage((pnlValue / initialValue) * 100)
     }
+  }, [userBet, outcome])
 
-    // Poll for updates
-    const interval = setInterval(() => {
-      const latestBet = localStorage.getItem("currentBet")
-      if (latestBet) {
-        setCurrentBet(JSON.parse(latestBet))
-      }
-    }, 1000)
+  if (!userBet) return null
 
-    return () => clearInterval(interval)
-  }, [])
-
-  const handleClaim = () => {
-    if (currentBet?.status === "won") {
-      toast.success(`Claimed ${currentBet.reward} RLUSD!`)
-      localStorage.removeItem("currentBet")
-      setCurrentBet(null)
-    }
-  }
-
-  if (!userBet) {
-    return (
-      <div className="rounded-xl border bg-card p-4 md:p-6">
-        <h3 className="text-lg font-semibold mb-4">Your Positions</h3>
-        <p className="text-muted-foreground">No active positions</p>
-      </div>
-    )
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4 md:p-6">
-      <h3 className="text-lg font-semibold mb-4">Your Positions</h3>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="font-medium">Bet on {userBet.choice}</p>
-            <p className="text-sm text-muted-foreground">Amount: {userBet.amount}</p>
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle className="text-lg">Your Positions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={userBet.position === "long" ? "default" : "destructive"}>
+                  {userBet.position === "long" ? (
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 mr-1" />
+                  )}
+                  {userBet.position.toUpperCase()}
+                </Badge>
+                <Badge variant="outline" className="capitalize">
+                  {userBet.choice}
+                </Badge>
+                {userBet.leverage && userBet.leverage > 1 && (
+                  <Badge variant="secondary">{userBet.leverage}x</Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {formatTimestamp(userBet.timestamp)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Position Size</p>
+                <p className="font-medium">
+                  <DollarSign className="w-4 h-4 inline-block" />
+                  {userBet.amount.toLocaleString()}
+                </p>
+              </div>
+              {userBet.stopLoss && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Stop Loss</p>
+                  <p className="font-medium text-red-500">
+                    <Target className="w-4 h-4 inline-block" />
+                    {userBet.stopLoss}
+                  </p>
+                </div>
+              )}
+              {userBet.takeProfit && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Take Profit</p>
+                  <p className="font-medium text-green-500">
+                    <Target className="w-4 h-4 inline-block" />
+                    {userBet.takeProfit}
+                  </p>
+                </div>
+              )}
+              {userBet.fees && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Fees</p>
+                  <p className="font-medium">
+                    <DollarSign className="w-4 h-4 inline-block" />
+                    {(userBet.fees.trading + userBet.fees.liquidity + userBet.fees.protocol).toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {outcome && (
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">P&L</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium ${pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)} ({pnlPercentage.toFixed(2)}%)
+                    </span>
+                  </div>
+                </div>
+                {outcome.canClaim && (
+                  <Button onClick={onClaim} className="w-full mt-2">
+                    Claim ${outcome.reward?.toFixed(2)}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
-          {outcome && outcome.canClaim && (
-            <button
-              onClick={onClaim}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-            >
-              Claim {outcome.reward}
-            </button>
+
+          {userBet.leverage && userBet.leverage > 1 && (
+            <div className="flex items-start gap-2 p-4 bg-yellow-500/10 rounded-lg">
+              <AlertCircle className="w-4 h-4 mt-0.5 text-yellow-500" />
+              <div className="text-sm text-yellow-500">
+                <p className="font-medium">Leveraged Position</p>
+                <p>Your position is leveraged {userBet.leverage}x. This increases both potential profits and losses.</p>
+              </div>
+            </div>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 

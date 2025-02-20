@@ -4,32 +4,56 @@ export interface PredictionMarketState {
   poolSize: number;
   participants: number;
   timeframe: "24h" | "7d" | "30d" | "90d" | "1y";
+  marketStatus: "open" | "closing" | "closed" | "settled";
+  liquidityPool: {
+    total: number;
+    distribution: {
+      altman: number;
+      musk: number;
+      trump: number;
+    };
+  };
   options: {
     altman: {
       odds: number;
       totalBets: number;
       supporters: number;
+      volume24h: number;
+      priceChange24h: number;
+      liquidityDepth: number;
       historicalOdds?: {
         timestamp: string;
         odds: number;
+        volume: number;
+        liquidity: number;
       }[];
     };
     musk: {
       odds: number;
       totalBets: number;
       supporters: number;
+      volume24h: number;
+      priceChange24h: number;
+      liquidityDepth: number;
       historicalOdds?: {
         timestamp: string;
         odds: number;
+        volume: number;
+        liquidity: number;
       }[];
     };
     trump: {
       odds: number;
       totalBets: number;
       supporters: number;
+      volume24h: number;
+      priceChange24h: number;
+      liquidityDepth: number;
       historicalOdds?: {
         timestamp: string;
         odds: number;
+        volume: number;
+        liquidity: number;
       }[];
     };
   };
@@ -43,11 +67,32 @@ export interface PredictionMarketState {
     choice: "altman" | "musk" | "trump";
     timestamp: string;
     position: "long" | "short";
+    leverage?: number;
+    stopLoss?: number;
+    takeProfit?: number;
+    fees?: {
+      trading: number;
+      liquidity: number;
+      protocol: number;
+    };
   };
   outcome?: {
     winner: "altman" | "musk" | "trump";
     canClaim: boolean;
     reward?: number;
+    settlementPrice: number;
+    settlementTime: string;
+  };
+  marketMetrics: {
+    totalVolume24h: number;
+    totalValueLocked: number;
+    impliedProbabilities: {
+      altman: number;
+      musk: number;
+      trump: number;
+    };
+    volatility24h: number;
+    marketEfficiency: number;
   };
 }
 
@@ -145,7 +190,12 @@ const generateHistoricalOdds = (
   baseOdds: number,
   personality: "altman" | "musk" | "trump"
 ) => {
-  const points: { timestamp: string; odds: number }[] = [];
+  const points: {
+    timestamp: string;
+    odds: number;
+    volume: number;
+    liquidity: number;
+  }[] = [];
   const now = new Date();
   const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
@@ -174,6 +224,19 @@ const generateHistoricalOdds = (
       odds *= 1 + eventImpacts.get(dateStr)!;
     }
 
+    // Generate mock volume and liquidity data
+    const baseVolume =
+      personality === "altman" ? 10000 : personality === "musk" ? 8000 : 7000;
+    const baseLiquidity =
+      personality === "altman"
+        ? 100000
+        : personality === "musk"
+        ? 80000
+        : 70000;
+
+    const volume = baseVolume * (1 + (Math.random() - 0.5) * 0.2); // 20% variation
+    const liquidity = baseLiquidity * (1 + (Math.random() - 0.5) * 0.1); // 10% variation
+
     // For recent data (last 24h), generate hourly data points
     if (i === 364) {
       for (let hour = 0; hour < 24; hour++) {
@@ -181,13 +244,17 @@ const generateHistoricalOdds = (
         hourDate.setHours(hour);
         points.push({
           timestamp: hourDate.toISOString(),
-          odds: addNoise(odds, 0.02), // Lower volatility for hourly data
+          odds: addNoise(odds, 0.02),
+          volume: (volume / 24) * (1 + (Math.random() - 0.5) * 0.3), // Hourly volume with 30% variation
+          liquidity: liquidity * (1 + (Math.random() - 0.5) * 0.05), // Hourly liquidity with 5% variation
         });
       }
     } else {
       points.push({
         timestamp: date.toISOString(),
         odds: odds,
+        volume: volume,
+        liquidity: liquidity,
       });
     }
   }
@@ -227,23 +294,41 @@ export const initialMarketState: PredictionMarketState = {
   poolSize: 124876.52,
   participants: 892,
   timeframe: "24h",
+  marketStatus: "open",
+  liquidityPool: {
+    total: 1000000,
+    distribution: {
+      altman: 400000,
+      musk: 300000,
+      trump: 300000,
+    },
+  },
   options: {
     altman: {
       odds: 1.85,
       totalBets: 47892.31,
       supporters: 312,
+      volume24h: 10000,
+      priceChange24h: 0.02,
+      liquidityDepth: 100000,
       historicalOdds: generateHistoricalOdds(1.85, "altman"),
     },
     musk: {
       odds: 2.45,
       totalBets: 41765.84,
       supporters: 285,
+      volume24h: 8000,
+      priceChange24h: 0.03,
+      liquidityDepth: 80000,
       historicalOdds: generateHistoricalOdds(2.45, "musk"),
     },
     trump: {
       odds: 3.15,
       totalBets: 35218.37,
       supporters: 295,
+      volume24h: 7000,
+      priceChange24h: 0.04,
+      liquidityDepth: 70000,
       historicalOdds: generateHistoricalOdds(3.15, "trump"),
     },
   },
@@ -251,6 +336,17 @@ export const initialMarketState: PredictionMarketState = {
     altman: 185.0,
     musk: 245.0,
     trump: 315.0,
+  },
+  marketMetrics: {
+    totalVolume24h: 25000,
+    totalValueLocked: 1000000,
+    impliedProbabilities: {
+      altman: 0.45,
+      musk: 0.35,
+      trump: 0.2,
+    },
+    volatility24h: 0.15,
+    marketEfficiency: 0.92,
   },
 };
 
@@ -280,6 +376,8 @@ export const finalState: PredictionMarketState = {
     winner: "altman",
     canClaim: true,
     reward: 185.0,
+    settlementPrice: 1.85,
+    settlementTime: FIXED_START_TIME,
   },
 };
 

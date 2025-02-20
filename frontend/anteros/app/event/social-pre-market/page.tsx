@@ -23,7 +23,11 @@ import {
   Clock,
   DollarSign,
   BarChart2,
-  Activity
+  Activity,
+  Lock,
+  Percent,
+  LineChart,
+  AlertTriangle,
 } from "lucide-react";
 
 function formatDate(date: Date | string) {
@@ -112,9 +116,9 @@ export default function SocialPreMarket() {
               <p className="text-muted-foreground">Predict the social influence trajectory of tech leaders</p>
             </div>
             <div className="flex items-center gap-4">
-              <Badge className="px-4 py-1.5">
+              <Badge variant={marketState.marketStatus === "open" ? "default" : "secondary"} className="px-4 py-1.5">
                 <Clock className="w-4 h-4 mr-2" />
-                {formattedEndTime}
+                {marketState.marketStatus.toUpperCase()} • {formattedEndTime}
               </Badge>
               <Badge className="px-4 py-1.5">
                 <Users className="w-4 h-4 mr-2" />
@@ -128,6 +132,54 @@ export default function SocialPreMarket() {
           </div>
 
           <div className="grid gap-4 md:gap-6 grid-cols-12">
+            {/* Market Overview - 12 columns */}
+            <div className="col-span-12 grid grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">24h Volume</p>
+                      <p className="text-2xl font-bold">${marketState.marketMetrics.totalVolume24h.toLocaleString()}</p>
+                    </div>
+                    <Activity className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Total Value Locked</p>
+                      <p className="text-2xl font-bold">${marketState.marketMetrics.totalValueLocked.toLocaleString()}</p>
+                    </div>
+                    <Lock className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">24h Volatility</p>
+                      <p className="text-2xl font-bold">{(marketState.marketMetrics.volatility24h * 100).toFixed(2)}%</p>
+                    </div>
+                    <Percent className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Market Efficiency</p>
+                      <p className="text-2xl font-bold">{(marketState.marketMetrics.marketEfficiency * 100).toFixed(2)}%</p>
+                    </div>
+                    <LineChart className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Main Chart Section - 8 columns */}
             <div className="col-span-12 lg:col-span-8 space-y-4">
               <Card>
@@ -141,7 +193,7 @@ export default function SocialPreMarket() {
                   <Card key={name}>
                     <CardHeader className="p-4">
                       <CardTitle className="text-lg flex items-center justify-between">
-                        {name.charAt(0).toUpperCase() + name.slice(1)}
+                        <span className="capitalize">{name}</span>
                         <Badge>
                           {data.odds.toFixed(2)}x
                         </Badge>
@@ -154,13 +206,23 @@ export default function SocialPreMarket() {
                           <span className="font-medium">${data.totalBets.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Supporters</span>
-                          <span className="font-medium">{data.supporters}</span>
+                          <span className="text-muted-foreground">24h Volume</span>
+                          <span className="font-medium">${data.volume24h.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Potential Return</span>
-                          <span className="font-medium text-green-600">
-                            {marketState.potentialReturns[name as keyof typeof marketState.potentialReturns]}%
+                          <span className="text-muted-foreground">24h Change</span>
+                          <span className={`font-medium ${data.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                            {(data.priceChange24h * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Liquidity Depth</span>
+                          <span className="font-medium">${data.liquidityDepth.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Implied Prob.</span>
+                          <span className="font-medium">
+                            {(marketState.marketMetrics.impliedProbabilities[name as keyof typeof marketState.marketMetrics.impliedProbabilities] * 100).toFixed(2)}%
                           </span>
                         </div>
                       </div>
@@ -174,7 +236,7 @@ export default function SocialPreMarket() {
             <div className="col-span-12 lg:col-span-4 space-y-4">
               <Tabs defaultValue="betting" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="betting">Betting</TabsTrigger>
+                  <TabsTrigger value="betting">Trading</TabsTrigger>
                   <TabsTrigger value="analysis">Analysis</TabsTrigger>
                 </TabsList>
                 <TabsContent value="betting">
@@ -220,32 +282,48 @@ export default function SocialPreMarket() {
                             <Activity className="w-4 h-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">24h Volume</span>
                           </div>
-                          <span className="font-medium">${(marketState.poolSize * 0.4).toLocaleString()}</span>
+                          <span className="font-medium">${marketState.marketMetrics.totalVolume24h.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <BarChart2 className="w-4 h-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Market Depth</span>
                           </div>
-                          <span className="font-medium">${marketState.poolSize.toLocaleString()}</span>
+                          <span className="font-medium">${marketState.marketMetrics.totalValueLocked.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <TrendingUp className="w-4 h-4 mr-2 text-green-500" />
                             <span className="text-sm text-muted-foreground">Highest Odds</span>
                           </div>
-                          <span className="font-medium text-green-500">2.35x</span>
+                          <span className="font-medium text-green-500">3.15x</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <TrendingDown className="w-4 h-4 mr-2 text-red-500" />
                             <span className="text-sm text-muted-foreground">Lowest Odds</span>
                           </div>
-                          <span className="font-medium text-red-500">1.95x</span>
+                          <span className="font-medium text-red-500">1.85x</span>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+
+                  {marketState.marketStatus === "closing" && (
+                    <Card className="mt-4 border-yellow-500">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                          <div>
+                            <p className="font-medium text-yellow-500">Market Closing Soon</p>
+                            <p className="text-sm text-muted-foreground">
+                              This market will close in {formatDate(marketState.endTime)}. Make sure to place your final trades before the deadline.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
