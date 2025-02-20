@@ -66,7 +66,7 @@ export const initialMarketState: PredictionMarketState = {
   endTime: new Date(
     Date.now() + 23 * 60 * 60 * 1000 + 50 * 60 * 1000
   ).toISOString(),
-  poolSize: 75000,
+  poolSize: 75852,
   participants: 345,
   options: {
     altman: {
