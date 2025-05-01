@@ -29,18 +29,17 @@ import {
   LineChart,
   AlertTriangle,
 } from "lucide-react";
+import { initializeClient } from "@/app/services/contractService";
 
+// Fix for hydration error - only format dates on client side
 function formatDate(date: Date | string) {
+  if (typeof window === 'undefined') {
+    // Server-side rendering: return fixed string to avoid hydration mismatch
+    return "Loading...";
+  }
+
   const d = new Date(date);
-  return d.toLocaleString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
+  return d.toLocaleString();
 }
 
 export default function SocialPreMarket() {
@@ -49,8 +48,24 @@ export default function SocialPreMarket() {
   const [aiSummaryVisible, setAiSummaryVisible] = useState(false);
   const [aiSummaryText, setAiSummaryText] = useState("");
   const [formattedEndTime, setFormattedEndTime] = useState("");
+  const [clientInitialized, setClientInitialized] = useState(false);
 
-  // Format date on client side only
+  // Initialize contract client
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const client = initializeClient();
+        setClientInitialized(true);
+        console.log("Contract client initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize contract client:", error);
+      }
+    };
+
+    init();
+  }, []);
+
+  // Format date on client side only to avoid hydration errors
   useEffect(() => {
     setFormattedEndTime(formatDate(marketState.endTime));
   }, [marketState.endTime]);

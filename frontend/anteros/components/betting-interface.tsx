@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import { PredictionMarketState } from "@/app/mocks/prediction-market-data"
 import { TrendingUp, TrendingDown, AlertCircle, Info } from "lucide-react"
+import { getSpotPrice, getFundingRate, openPosition } from "@/app/services/contractService"
 
 interface BettingInterfaceProps {
   marketState: PredictionMarketState
@@ -26,20 +27,53 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
   const [useAdvancedFeatures, setUseAdvancedFeatures] = useState(false)
   const [stopLoss, setStopLoss] = useState<number | null>(null)
   const [takeProfit, setTakeProfit] = useState<number | null>(null)
+  const [spotPrices, setSpotPrices] = useState<{ [key: string]: number }>({})
+  const [fundingRates, setFundingRates] = useState<{ [key: string]: number }>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Fetch spot prices and funding rates
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const prices: { [key: string]: number } = {}
+        const rates: { [key: string]: number } = {}
+
+        for (const option of Object.keys(marketState.options)) {
+          prices[option] = await getSpotPrice(option)
+          rates[option] = await getFundingRate(option)
+        }
+
+        setSpotPrices(prices)
+        setFundingRates(rates)
+      } catch (error) {
+        console.error("Error fetching prices:", error)
+        toast.error("Failed to fetch latest prices")
+      }
+    }
+
+    fetchPrices()
+
+    // Refresh prices every 10 seconds
+    const interval = setInterval(fetchPrices, 10000)
+    return () => clearInterval(interval)
+  }, [marketState.options])
 
   const calculatePotentialReturn = () => {
     if (!selectedChoice || amount <= 0) return 0;
-    const odds = marketState.options[selectedChoice].odds;
-    const multiplier = position === "long" ? odds : 2 - odds;
+    // Use spot price if available, fallback to market state odds
+    const price = spotPrices[selectedChoice] || marketState.options[selectedChoice].odds;
+    const multiplier = position === "long" ? price : 2 - price;
     return amount * multiplier * leverage;
   }
 
   const calculateMaxLoss = () => {
     if (!selectedChoice || amount <= 0) return 0;
-    return position === "long" ? amount * leverage : amount * leverage * (marketState.options[selectedChoice].odds - 1);
+    // Use spot price if available, fallback to market state odds
+    const price = spotPrices[selectedChoice] || marketState.options[selectedChoice].odds;
+    return position === "long" ? amount * leverage : amount * leverage * (price - 1);
   }
 
-  const handleBet = () => {
+  const handleBet = async () => {
     if (selectedChoice && amount > 0) {
       // Validate advanced features
       if (useAdvancedFeatures) {
@@ -47,18 +81,36 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
           toast.error("Maximum leverage is 3x");
           return;
         }
-        if (stopLoss && stopLoss >= marketState.options[selectedChoice].odds) {
+        if (stopLoss && stopLoss >= (spotPrices[selectedChoice] || marketState.options[selectedChoice].odds)) {
           toast.error("Stop loss must be below current odds");
           return;
         }
-        if (takeProfit && takeProfit <= marketState.options[selectedChoice].odds) {
+        if (takeProfit && takeProfit <= (spotPrices[selectedChoice] || marketState.options[selectedChoice].odds)) {
           toast.error("Take profit must be above current odds");
           return;
         }
       }
 
-      onBet(amount, selectedChoice);
-      toast.success("Position opened successfully!");
+      try {
+        setIsLoading(true)
+        // Call contract service to open position
+        const txHash = await openPosition(
+          selectedChoice,
+          amount,
+          position === "long"
+        )
+
+        console.log("Transaction hash:", txHash)
+
+        // Call parent component's onBet handler for UI updates
+        onBet(amount, selectedChoice)
+        toast.success("Position opened successfully!")
+      } catch (error) {
+        console.error("Error opening position:", error)
+        toast.error("Failed to open position. Please try again.")
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -115,7 +167,9 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
                 <div className="mt-2 space-y-1">
                   <p className="text-sm text-muted-foreground flex justify-between">
                     <span>Odds</span>
-                    <span className="font-medium">{data.odds}x</span>
+                    <span className="font-medium">
+                      {spotPrices[name] ? spotPrices[name].toFixed(2) : data.odds.toFixed(2)}x
+                    </span>
                   </p>
                   <p className="text-sm text-muted-foreground flex justify-between">
                     <span>24h Change</span>
@@ -124,8 +178,10 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground flex justify-between">
-                    <span>Volume</span>
-                    <span>${data.volume24h.toLocaleString()}</span>
+                    <span>Funding Rate</span>
+                    <span className="text-blue-500">
+                      {fundingRates[name] ? (fundingRates[name] * 100).toFixed(2) : "0.00"}%
+                    </span>
                   </p>
                 </div>
               </button>
@@ -207,9 +263,9 @@ export default function BettingInterface({ marketState, onBet }: BettingInterfac
         <Button
           onClick={handleBet}
           className="w-full"
-          disabled={!selectedChoice || amount <= 0}
+          disabled={!selectedChoice || amount <= 0 || isLoading}
         >
-          Place Bet
+          {isLoading ? "Processing..." : "Place Bet"}
         </Button>
       </CardContent>
     </Card>

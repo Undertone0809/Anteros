@@ -1,11 +1,12 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 import { PredictionMarketState, getHistoricalDataForTimeframe } from "@/app/mocks/prediction-market-data"
+import { getSpotPrice } from "@/app/services/contractService"
 import dynamic from 'next/dynamic'
 import { Chart as ChartJS, ChartData, LineElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale } from 'chart.js'
 import { Line } from 'react-chartjs-2'
@@ -101,7 +102,11 @@ export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
   const [timeframe, setTimeframe] = useState<PredictionMarketState["timeframe"]>(marketState.timeframe)
   const [chartType, setChartType] = useState<"growth" | "odds">("growth")
   const [chartInstance, setChartInstance] = useState<ChartJS | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [liveSpotPrices, setLiveSpotPrices] = useState<{ [key: string]: number }>({})
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // Initialize chart.js
   useEffect(() => {
     const init = async () => {
       await initChartJS()
@@ -110,12 +115,61 @@ export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
     init()
   }, [])
 
+  // Fetch live spot prices
+  const fetchSpotPrices = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      const prices: { [key: string]: number } = {}
+
+      // Fetch prices for each option
+      for (const option of Object.keys(marketState.options)) {
+        prices[option] = await getSpotPrice(option)
+      }
+
+      setLiveSpotPrices(prices)
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Failed to fetch spot prices:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [marketState.options])
+
+  // Initial price fetch
+  useEffect(() => {
+    fetchSpotPrices()
+
+    // Refresh prices every 10 seconds
+    const interval = setInterval(fetchSpotPrices, 10000)
+    return () => clearInterval(interval)
+  }, [fetchSpotPrices])
+
   // Get historical data for the selected timeframe
   const historicalData = {
     altman: getHistoricalDataForTimeframe(timeframe, marketState.options.altman.historicalOdds || []),
     musk: getHistoricalDataForTimeframe(timeframe, marketState.options.musk.historicalOdds || []),
     trump: getHistoricalDataForTimeframe(timeframe, marketState.options.trump.historicalOdds || []),
   }
+
+  // Update latest data point with real-time spot price if available
+  useEffect(() => {
+    if (Object.keys(liveSpotPrices).length > 0 && historicalData.altman.length > 0) {
+      // Deep clone to avoid modifying the original data
+      const updatedData = { ...historicalData }
+
+      // Update the last data point for each option with live price
+      Object.keys(updatedData).forEach(key => {
+        if (liveSpotPrices[key] && updatedData[key as keyof typeof updatedData].length > 0) {
+          const dataArray = [...updatedData[key as keyof typeof updatedData]]
+          dataArray[dataArray.length - 1] = {
+            ...dataArray[dataArray.length - 1],
+            odds: liveSpotPrices[key]
+          }
+          updatedData[key as keyof typeof updatedData] = dataArray
+        }
+      })
+    }
+  }, [liveSpotPrices, historicalData])
 
   // Calculate growth rates
   const growthRates = {
@@ -259,61 +313,91 @@ export default function GrowthRateChart({ marketState }: GrowthRateChartProps) {
     },
   }
 
+  // Manual refresh function
+  const handleRefresh = () => {
+    fetchSpotPrices()
+  }
+
+  if (!isClient || isLoading) {
+    return <LoadingAnimation />
+  }
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>Real-time Market Data</CardTitle>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setChartType("growth")}
-              className={chartType !== "growth" ? "opacity-50" : ""}
-            >
-              Growth Rate
-            </Button>
-            <Button
-              onClick={() => setChartType("odds")}
-              className={chartType !== "odds" ? "opacity-50" : ""}
-            >
-              Odds
-            </Button>
-            <Button
-              onClick={handleResetZoom}
-              className="gap-1"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset Zoom
-            </Button>
-          </div>
+    <div className="space-y-4">
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <div className="flex gap-2">
           <Select value={timeframe} onValueChange={(value) => setTimeframe(value as PredictionMarketState["timeframe"])}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Timeframe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="24h">24h</SelectItem>
-              <SelectItem value="7d">7d</SelectItem>
-              <SelectItem value="30d">30d</SelectItem>
-              <SelectItem value="90d">90d</SelectItem>
-              <SelectItem value="1y">1y</SelectItem>
+              <SelectItem value="24h">24 Hours</SelectItem>
+              <SelectItem value="7d">7 Days</SelectItem>
+              <SelectItem value="30d">30 Days</SelectItem>
+              <SelectItem value="90d">90 Days</SelectItem>
+              <SelectItem value="1y">1 Year</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={chartType} onValueChange={(value) => setChartType(value as "growth" | "odds")}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Chart Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="growth">Growth Rate</SelectItem>
+              <SelectItem value="odds">Absolute Odds</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </CardHeader>
-      <CardContent>
-        {!isClient ? (
-          <LoadingAnimation />
-        ) : (
-          <LineChart
-            options={options}
-            data={data}
-            ref={(reference) => {
-              if (reference) {
-                setChartInstance(reference as ChartJS)
-              }
-            }}
-          />
-        )}
-      </CardContent>
-    </Card>
+
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handleResetZoom}>
+            Reset Zoom
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          {Object.entries(marketState.options).map(([name, data]) => (
+            <Card key={name} className={`border-l-4 ${name === 'altman' ? 'border-l-[rgb(75,192,192)]' :
+              name === 'musk' ? 'border-l-[rgb(53,162,235)]' :
+                'border-l-[rgb(255,99,132)]'
+              }`}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium capitalize">{name}</p>
+                  <p className="text-2xl font-bold">
+                    {liveSpotPrices[name] ? liveSpotPrices[name].toFixed(2) : data.odds.toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">24h Change</p>
+                  <p className={data.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}>
+                    {(data.priceChange24h * 100).toFixed(2)}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-[400px] relative">
+        <LineChart
+          options={options}
+          data={data}
+          plugins={[{
+            afterInit: (chart) => {
+              setChartInstance(chart)
+            }
+          }]}
+        />
+      </div>
+    </div>
   )
 }

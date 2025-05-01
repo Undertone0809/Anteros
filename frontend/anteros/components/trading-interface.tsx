@@ -5,15 +5,37 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
+import { openPosition } from "@/app/services/contractService"
 
 export default function TradingInterface() {
-  const [selectedPerson, setSelectedPerson] = useState("Altman")
+  const [selectedKeyword, setSelectedKeyword] = useState("altman")
   const [position, setPosition] = useState("long")
   const [amount, setAmount] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleTrade = () => {
-    console.log(`Trading ${position} on ${selectedPerson} for ${amount}`)
-    // Here you would integrate with your RLUSD settlement layer
+  const handleTrade = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const txHash = await openPosition(
+        selectedKeyword,
+        parseFloat(amount),
+        position === "long"
+      )
+
+      console.log(`Transaction hash: ${txHash}`)
+      toast.success(`Position opened successfully!`)
+    } catch (error) {
+      console.error("Error opening position:", error)
+      toast.error("Failed to open position")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -21,14 +43,15 @@ export default function TradingInterface() {
       <h2 className="text-xl font-semibold mb-4">Take a Position</h2>
       <div className="space-y-4">
         <div>
-          <Label htmlFor="person">Select Person</Label>
-          <Select onValueChange={setSelectedPerson} defaultValue={selectedPerson}>
-            <SelectTrigger id="person">
-              <SelectValue placeholder="Select person" />
+          <Label htmlFor="keyword">Select Keyword</Label>
+          <Select onValueChange={setSelectedKeyword} defaultValue={selectedKeyword}>
+            <SelectTrigger id="keyword">
+              <SelectValue placeholder="Select keyword" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Altman">Altman</SelectItem>
-              <SelectItem value="Musk">Musk</SelectItem>
+              <SelectItem value="altman">Altman</SelectItem>
+              <SelectItem value="musk">Musk</SelectItem>
+              <SelectItem value="trump">Trump</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -54,8 +77,8 @@ export default function TradingInterface() {
             onChange={(e) => setAmount(e.target.value)}
           />
         </div>
-        <Button onClick={handleTrade} className="w-full">
-          Place Trade
+        <Button onClick={handleTrade} className="w-full" disabled={isLoading}>
+          {isLoading ? "Processing..." : "Place Trade"}
         </Button>
       </div>
     </div>
